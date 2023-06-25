@@ -71,6 +71,11 @@ public class Network : IDisposable
         _udpClient.Send(data, data.Length, ipep);
     }
 
+    public void SendData(byte[] data, int len, IPEndPoint ipep)
+    {
+        _udpClient.Send(data, len, ipep);
+    }
+
     public void SetPassiveScan()
     {
         if(_discoveryTask?.Status == TaskStatus.Running)
