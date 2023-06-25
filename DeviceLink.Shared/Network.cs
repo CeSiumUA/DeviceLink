@@ -18,7 +18,7 @@ public class Network : IDisposable
     private CancellationTokenSource? _listeningTokenSource;
     private CancellationTokenSource? _discoveryTokenSource;
 
-    private readonly Action<IPEndPoint, byte[]> _protocolReceiveCallback;
+    private readonly Action<Network, IPEndPoint, byte[]> _protocolReceiveCallback;
     private readonly Action<IPEndPoint, byte[]> _audioReceiveCallback;
 
     private readonly Guid _clientId = Guid.NewGuid();
@@ -33,7 +33,7 @@ public class Network : IDisposable
     
     public Guid Id => _clientId;
 
-    public Network(Action<IPEndPoint, byte[]> protocolReceiveCallback, Action<IPEndPoint, byte[]> audioReceiveCallback)
+    public Network(Action<Network, IPEndPoint, byte[]> protocolReceiveCallback, Action<IPEndPoint, byte[]> audioReceiveCallback)
     {
         _assignedIpAddress = GetLocalIpAddress();
 
@@ -66,6 +66,11 @@ public class Network : IDisposable
         _discoveryTask.Start();
     }
 
+    public void SendData(byte[] data, IPEndPoint ipep)
+    {
+        _udpClient.Send(data, data.Length, ipep);
+    }
+
     public void SetPassiveScan()
     {
         if(_discoveryTask?.Status == TaskStatus.Running)
@@ -87,7 +92,7 @@ public class Network : IDisposable
                 var result = await _udpClient.ReceiveAsync(listenToken);
                 if(result.RemoteEndPoint.Address.ToString() != _assignedIpAddress.ToString())
                 {
-                    _protocolReceiveCallback(result.RemoteEndPoint, result.Buffer);
+                    _protocolReceiveCallback(this, result.RemoteEndPoint, result.Buffer);
                 }
             }
         });
