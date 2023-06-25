@@ -29,8 +29,7 @@ public class Network : IDisposable
 
     public Network(Action<IPEndPoint, byte[]> protocolReceiveCallback, Action<IPEndPoint, byte[]> audioReceiveCallback)
     {
-        _udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, NW_PROTOCOl_PORT));
-        PickNetworkInterface(_udpClient.Client);
+        _udpClient = new UdpClient(new IPEndPoint(GetLocalIpAddress(), NW_PROTOCOl_PORT));
 
         _audioUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, NW_AUDIO_PORT));
 
@@ -104,27 +103,21 @@ public class Network : IDisposable
         _discoveryTask?.Dispose();
     }
 
-    private void PickNetworkInterface(Socket socket)
+    private IPAddress GetLocalIpAddress()
     {
-        var nics = NetworkInterface.GetAllNetworkInterfaces();
-        foreach (var nic in nics)
+        foreach (var netI in NetworkInterface.GetAllNetworkInterfaces())
         {
-            var niProps = nic.GetIPProperties();
-            if (!niProps.MulticastAddresses.Any())
+            if (netI.NetworkInterfaceType != NetworkInterfaceType.Wireless80211 &&
+                (netI.NetworkInterfaceType != NetworkInterfaceType.Ethernet ||
+                    netI.OperationalStatus != OperationalStatus.Up)) continue;
+            foreach (var uniIpAddrInfo in netI.GetIPProperties().UnicastAddresses.Where(x => netI.GetIPProperties().GatewayAddresses.Count > 0))
             {
-                continue;
-            }
-            if (!nic.SupportsMulticast)
-            {
-                continue;
-            }
-            var niPropsV4 = niProps.GetIPv4Properties();
-            if(niPropsV4 == null)
-            {
-                continue;
-            }
 
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, (int)IPAddress.HostToNetworkOrder(niPropsV4.Index));
+                if (uniIpAddrInfo.Address.AddressFamily == AddressFamily.InterNetwork &&
+                    uniIpAddrInfo.AddressPreferredLifetime != uint.MaxValue)
+                    return uniIpAddrInfo.Address;
+            }
         }
+        return IPAddress.Any;
     }
 }
