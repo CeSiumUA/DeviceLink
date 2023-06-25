@@ -23,13 +23,17 @@ public class Network : IDisposable
 
     private readonly Guid _clientId = Guid.NewGuid();
 
+    private readonly IPAddress _assignedIpAddress;
+
     const int NW_PROTOCOl_PORT = 9343;
 
     const int NW_AUDIO_PORT = 9344;
 
     public Network(Action<IPEndPoint, byte[]> protocolReceiveCallback, Action<IPEndPoint, byte[]> audioReceiveCallback)
     {
-        _udpClient = new UdpClient(new IPEndPoint(GetLocalIpAddress(), NW_PROTOCOl_PORT));
+        _assignedIpAddress = GetLocalIpAddress();
+
+        _udpClient = new UdpClient(new IPEndPoint(_assignedIpAddress, NW_PROTOCOl_PORT));
 
         _audioUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, NW_AUDIO_PORT));
 
@@ -68,7 +72,10 @@ public class Network : IDisposable
             while(!listenToken.IsCancellationRequested)
             {
                 var result = await _udpClient.ReceiveAsync(listenToken);
-                _protocolReceiveCallback(result.RemoteEndPoint, result.Buffer);
+                if(result.RemoteEndPoint.Address.ToString() != _assignedIpAddress.ToString())
+                {
+                    _protocolReceiveCallback(result.RemoteEndPoint, result.Buffer);
+                }
             }
         });
 
@@ -113,8 +120,7 @@ public class Network : IDisposable
             foreach (var uniIpAddrInfo in netI.GetIPProperties().UnicastAddresses.Where(x => netI.GetIPProperties().GatewayAddresses.Count > 0))
             {
 
-                if (uniIpAddrInfo.Address.AddressFamily == AddressFamily.InterNetwork &&
-                    uniIpAddrInfo.AddressPreferredLifetime != uint.MaxValue)
+                if (uniIpAddrInfo.Address.AddressFamily == AddressFamily.InterNetwork)
                     return uniIpAddrInfo.Address;
             }
         }
