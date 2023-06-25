@@ -2,5 +2,6 @@
 
 public enum ProtocolType
 {
-    Discover
+    Discover,
+    DiscoverResponse
 }

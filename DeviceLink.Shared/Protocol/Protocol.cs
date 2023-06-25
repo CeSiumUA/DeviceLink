@@ -30,6 +30,28 @@ public class Protocol
         return protocol;
     }
 
+    public static Protocol ConstructDiscoverResponse(Guid responseId, Guid targetId, string? machineName = null)
+    {
+        var discoverResponse = new DiscoverResponse()
+        {
+            TargetGuid = targetId,
+            ResponseGuid = responseId,
+        };
+
+        if (!string.IsNullOrEmpty(machineName))
+        {
+            discoverResponse.HostName = machineName;
+        }
+
+        var protocol = new Protocol()
+        {
+            Data = MessagePackSerializer.Serialize(discoverResponse),
+            Type = ProtocolType.DiscoverResponse
+        };
+
+        return protocol;
+    }
+
     public static Protocol DeserializeProtocol(byte[] data)
     {
         return MessagePackSerializer.Deserialize<Protocol>(data);

@@ -25,9 +25,13 @@ public class Network : IDisposable
 
     private readonly IPAddress _assignedIpAddress;
 
+    private int _scanDelay = 3000;
+
     const int NW_PROTOCOl_PORT = 9343;
 
     const int NW_AUDIO_PORT = 9344;
+    
+    public Guid Id => _clientId;
 
     public Network(Action<IPEndPoint, byte[]> protocolReceiveCallback, Action<IPEndPoint, byte[]> audioReceiveCallback)
     {
@@ -50,15 +54,24 @@ public class Network : IDisposable
 
         _udpClient.EnableBroadcast = true;
         var discoverPackageBytes = Protocol.Protocol.ConstructDiscover(_clientId).Serialize();
+        _scanDelay = 100;
         _discoveryTask = new Task(async () =>
         {
             while(!discoveryToken.IsCancellationRequested)
             {
                 await _udpClient.SendAsync(discoverPackageBytes, discoverPackageBytes.Length, new IPEndPoint(IPAddress.Broadcast, NW_PROTOCOl_PORT));
-                await Task.Delay(10000);
+                await Task.Delay(_scanDelay);
             }
         });
         _discoveryTask.Start();
+    }
+
+    public void SetPassiveScan()
+    {
+        if(_discoveryTask?.Status == TaskStatus.Running)
+        {
+            _scanDelay = 3000;
+        }
     }
 
     public void StartListener()
