@@ -113,7 +113,7 @@ void SendSound(byte[] data, int len)
 {
     if(selectedPeer != null)
     {
-        network.SendData(data, len, selectedPeer.IpEndPoint);
+        network.SendData(data, len, selectedPeer.IpEndPoint.Address);
     }
 }
 
@@ -123,7 +123,7 @@ void PrintPeersTable()
     int i = 1;
     foreach (var peer in peers)
     {
-        Console.WriteLine("{0}\t{1}", i, peer.Value.HostName);
+        Console.WriteLine("{0}\t{1}\t{2}", i, peer.Value.HostName, peer.Value.Id);
     }
 }
 

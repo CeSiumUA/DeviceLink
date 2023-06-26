@@ -76,6 +76,16 @@ public class Network : IDisposable
         _udpClient.Send(data, len, ipep);
     }
 
+    public void SendData(byte[] data, IPAddress ip)
+    {
+        _audioUdpClient.Send(data, data.Length, new IPEndPoint(ip, NW_AUDIO_PORT));
+    }
+
+    public void SendData(byte[] data, int len, IPAddress ip)
+    {
+        _audioUdpClient.Send(data, len, new IPEndPoint(ip, NW_AUDIO_PORT));
+    }
+
     public void SetPassiveScan()
     {
         if(_discoveryTask?.Status == TaskStatus.Running)

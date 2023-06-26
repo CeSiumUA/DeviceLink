@@ -5,7 +5,7 @@ namespace DeviceLink.Shared;
 public class Player : IDisposable
 {
     private readonly BufferedWaveProvider _waveProvider;
-    private readonly WaveOutEvent _waveOutEvent = new();
+    private readonly DirectSoundOut _waveOutEvent = new();
 
     public Player()
     {
