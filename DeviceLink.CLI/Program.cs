@@ -113,7 +113,18 @@ void SendSound(byte[] data, int len)
 {
     if(selectedPeer != null)
     {
-        network.SendData(data, len, selectedPeer.IpEndPoint.Address);
+        var chunks = len / (ushort.MaxValue - 1);
+        var left = len % (ushort.MaxValue - 1);
+        int i = 0;
+        for(; i < chunks; i++)
+        {
+            network.SendData(data.Skip(i * (ushort.MaxValue - 1)).Take((ushort.MaxValue - 1)).ToArray(), selectedPeer.IpEndPoint.Address);
+        }
+
+        if(left != 0)
+        {
+            network.SendData(data.Skip(i * (ushort.MaxValue - 1)).Take(left).ToArray(), selectedPeer.IpEndPoint.Address);
+        }
     }
 }
 
