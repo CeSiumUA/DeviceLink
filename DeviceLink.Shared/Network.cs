@@ -39,7 +39,7 @@ public class Network : IDisposable
 
         _udpClient = new UdpClient(new IPEndPoint(_assignedIpAddress, NW_PROTOCOl_PORT));
 
-        _audioUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, NW_AUDIO_PORT));
+        _audioUdpClient = new UdpClient(new IPEndPoint(_assignedIpAddress, NW_AUDIO_PORT));
 
         _protocolReceiveCallback = protocolReceiveCallback;
         _audioReceiveCallback = audioReceiveCallback;
